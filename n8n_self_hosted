@@ -1,0 +1,52 @@
+# Create directory
+mkdir -p /opt/n8n && cd /opt/n8n
+
+# Create docker-compose.yml
+cat > docker-compose.yml << 'EOF'
+version: "3.8"
+
+services:
+  n8n:
+    image: n8nio/n8n:latest
+    restart: always
+    ports:
+      - "127.0.0.1:5678:5678"
+    environment:
+      - N8N_BASIC_AUTH_ACTIVE=true
+      - N8N_BASIC_AUTH_USER=admin
+      - N8N_BASIC_AUTH_PASSWORD=YourStrongPassword123!
+      - N8N_HOST=automation.yourdomain.com
+      - N8N_PORT=5678
+      - N8N_PROTOCOL=https
+      - WEBHOOK_URL=https://automation.yourdomain.com/
+      - GENERIC_TIMEZONE=Europe/Rome
+      - EXECUTIONS_MODE=regular
+      - EXECUTIONS_DATA_SAVE_ON_ERROR=all
+      - EXECUTIONS_DATA_SAVE_ON_SUCCESS=all
+      - EXECUTIONS_DATA_SAVE_ON_PROGRESS=true
+      - EXECUTIONS_DATA_SAVE_MANUAL_EXECUTIONS=true
+      - DB_TYPE=sqlite
+      - N8N_ENCRYPTION_KEY=YourRandomEncryptionKeyChangeThis123456789
+    volumes:
+      - ~/.n8n:/home/node/.n8n
+      - /opt/n8n/backups:/backups
+
+  # Optional: PostgreSQL for better performance at scale
+  postgres:
+    image: postgres:16-alpine
+    restart: always
+    environment:
+      - POSTGRES_USER=n8n
+      - POSTGRES_PASSWORD=n8nPassword123!
+      - POSTGRES_DB=n8n
+    volumes:
+      - /opt/n8n/postgres-data:/var/lib/postgresql/data
+    ports:
+      - "127.0.0.1:5432:5432"
+EOF
+
+# Start n8n
+docker-compose up -d
+
+# Check logs
+docker-compose logs -f n8n
